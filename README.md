@@ -68,6 +68,11 @@ Menu:
 Duzenleme modunda `Ctrl+Z` / `Ctrl+Y` geri-ileri alir; PNG/JPEG eklemeler SVG kapsayiciya
 cevrilip kutu genisligine oturtulur.
 
+Revize JSON ciktilari cihazdan disari aktarilan orijinal dosyanin bicmini korur: alan ve
+nesne sirasi aynen kalir, 2 bosluk girinti, LF satir sonu, BOM'suz UTF-8 ve `'` gibi
+karakterler oldugu gibi yazilir (`\u0027`'ye cevrilmez). Duzenlenmis satirlar disinda dosya
+orijinalle bayt bayt aynidir.
+
 ## Derleme
 
 ```bat

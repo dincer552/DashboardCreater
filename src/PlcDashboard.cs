@@ -1742,7 +1742,9 @@ namespace PlcDashboard
         {
             if (currentRoot == null) return null;
             Snap s = new Snap();
-            s.Json = UnescapeUnicode(js.Serialize(currentRoot));
+            StringBuilder snap = new StringBuilder();
+            WriteNode(snap, currentRoot, 0);
+            s.Json = snap.ToString();
             string pp = Path.Combine(AppDir, "points.json");
             s.Points = File.Exists(pp) ? File.ReadAllText(pp) : "";
             s.DashIndex = dashBox.SelectedIndex;
@@ -2340,19 +2342,75 @@ namespace PlcDashboard
             }
         }
 
+        // Cihazin kendi disari aktardigi bicim: 2 bosluk girinti, LF, UTF-8 (BOM'suz),
+        // son satirda yeni satir yok, tek tirnak ve non-ASCII karakterler kaçisirilmaz.
+        // Kaynak sirasi korunur: sozlukler eklenme sirasiyla dolasilir.
         public void WriteJsonTo(string target)
         {
-            string text = UnescapeUnicode(js.Serialize(currentRoot));
-            File.WriteAllText(target, text, new UTF8Encoding(false));
+            StringBuilder sb = new StringBuilder();
+            WriteNode(sb, currentRoot, 0);
+            File.WriteAllText(target, sb.ToString(), new UTF8Encoding(false));
         }
 
-        static string UnescapeUnicode(string s)
+        static void WriteNode(StringBuilder sb, object node, int depth)
         {
-            return Regex.Replace(s, "\\\\u([0-9a-fA-F]{4})", m =>
+            if (node == null) { sb.Append("null"); return; }
+            string s = node as string;
+            if (s != null) { sb.Append('"').Append(JsonEsc(s)).Append('"'); return; }
+            if (node is bool) { sb.Append((bool)node ? "true" : "false"); return; }
+            if (node is double || node is float || node is decimal)
             {
-                int code = Convert.ToInt32(m.Groups[1].Value, 16);
-                return code < 0x80 ? m.Value : ((char)code).ToString();
-            });
+                sb.Append(((IFormattable)node).ToString("R", CultureInfo.InvariantCulture));
+                return;
+            }
+            if (node is byte || node is sbyte || node is short || node is ushort
+                || node is int || node is uint || node is long || node is ulong)
+            {
+                sb.Append(((IFormattable)node).ToString(null, CultureInfo.InvariantCulture));
+                return;
+            }
+            IDictionary<string, object> d = node as IDictionary<string, object>;
+            if (d != null)
+            {
+                if (d.Count == 0) { sb.Append("{}"); return; }
+                sb.Append('{');
+                bool first = true;
+                foreach (KeyValuePair<string, object> kv in d)
+                {
+                    if (!first) sb.Append(',');
+                    PadLine(sb, depth + 1);
+                    sb.Append('"').Append(JsonEsc(kv.Key)).Append("\": ");
+                    WriteNode(sb, kv.Value, depth + 1);
+                    first = false;
+                }
+                PadLine(sb, depth);
+                sb.Append('}');
+                return;
+            }
+            System.Collections.IEnumerable items = node as System.Collections.IEnumerable;
+            if (items != null)
+            {
+                System.Collections.ArrayList list = new System.Collections.ArrayList();
+                foreach (object o in items) list.Add(o);
+                if (list.Count == 0) { sb.Append("[]"); return; }
+                sb.Append('[');
+                for (int i = 0; i < list.Count; i++)
+                {
+                    if (i > 0) sb.Append(',');
+                    PadLine(sb, depth + 1);
+                    WriteNode(sb, list[i], depth + 1);
+                }
+                PadLine(sb, depth);
+                sb.Append(']');
+                return;
+            }
+            sb.Append('"').Append(JsonEsc(Convert.ToString(node, CultureInfo.InvariantCulture))).Append('"');
+        }
+
+        static void PadLine(StringBuilder sb, int depth)
+        {
+            sb.Append('\n');
+            for (int i = 0; i < depth * 2; i++) sb.Append(' ');
         }
 
         void SavePoints()
