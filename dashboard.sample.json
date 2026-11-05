@@ -1,0 +1,55 @@
+[
+  {
+    "id": "00000000000000000000000000000001",
+    "title": [
+      { "key": "tr-TR", "value": "Ornek pano", "language": "tr-TR" },
+      { "key": "en-US", "value": "Sample board", "language": "en-US" }
+    ],
+    "tiles": [
+      {
+        "column": 0,
+        "row": 0,
+        "width": 2,
+        "height": 1,
+        "type": "datapoint",
+        "color": "petrol-background",
+        "title": "Besleme sicakligi",
+        "tileConfig": {
+          "datapointId": "1!ORNEK0000000001",
+          "datapointName": "Besleme sicakligi",
+          "chartType": "singlevalue"
+        }
+      },
+      {
+        "column": 2,
+        "row": 0,
+        "width": 2,
+        "height": 1,
+        "type": "bargauge",
+        "color": "green-background",
+        "title": "Besleme fan hizi",
+        "tileConfig": {
+          "datapointId": "1!ORNEK0000000002",
+          "datapointName": "Besleme fan hizi",
+          "maxValue": 100,
+          "chartType": "bargauge"
+        }
+      },
+      {
+        "column": 4,
+        "row": 0,
+        "width": 2,
+        "height": 2,
+        "type": "datapoint",
+        "color": "petrol-background",
+        "title": "Besleme fan gucu",
+        "tileConfig": {
+          "datapointIds": [
+            { "datapointId": "1!ORNEK0000000003", "name": "Besleme fan gucu" }
+          ],
+          "chartType": "singlevalue"
+        }
+      }
+    ]
+  }
+]

@@ -1,0 +1,7 @@
+{
+  "points": [
+    { "id": "1!ORNEK0000000001", "name": "Besleme sicakligi", "jsonId": "4-TMPVAL" },
+    { "id": "1!ORNEK0000000002", "name": "Besleme fan hizi", "jsonId": "POSITION" },
+    { "id": "1!ORNEK0000000003", "name": "Besleme fan gucu", "jsonId": "SAF_EBM_POWER" }
+  ]
+}

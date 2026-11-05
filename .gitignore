@@ -1,0 +1,9 @@
+bin/
+obj/
+*.exe
+*.pdb
+_out.json
+selftest-report.txt
+config.json
+Communication/
+_win.png
