@@ -1,12 +1,5 @@
 {
   "deviceHost": "",
-  "jsonPort": 80,
   "localTunnelPort": 4243,
-  "remoteHttpPort": 80,
-  "scopePort": 4242,
-  "pin": "6000",
-  "user": "ADMIN",
-  "password": "",
-  "jsonTimeoutMs": 3000,
   "directFallback": true
 }

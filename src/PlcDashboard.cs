@@ -837,13 +837,14 @@ namespace PlcDashboard
 
         // Tek veri kaynagi: RainbowTcpTunnel uzerinden Climatix HTTP JSON.
         // Tunel kurulamazsa ayni API dogrudan cihaz IP'sinden denenir (repodaki davranis).
+        // Kullanici/sifre/pin/port programda kayitlidir; kullanicidan yalnizca IP istenir.
         string deviceHost = "";
-        int jsonHttpPort = 80;
-        string apiPin = "6000";
-        string apiUser = "ADMIN";
-        string apiPass = "";
-        int apiScopePort = 4242;
-        int jsonTimeoutMs = 3000;
+        const int jsonHttpPort = 80;
+        const string apiPin = "6000";
+        const string apiUser = "ADMIN";
+        const string apiPass = "SBTAdmin!";
+        const int apiScopePort = 4242;
+        const int jsonTimeoutMs = 3000;
         bool allowDirectFallback = true;
         TunnelManager tunnel = new TunnelManager();
         bool tunnelUnavailable;
@@ -897,7 +898,7 @@ namespace PlcDashboard
             ToolStripMenuItem optMenu = new ToolStripMenuItem("Seckiler");
 
             ToolStripMenuItem connMenu = new ToolStripMenuItem("Baglanti");
-            connMenu.DropDownItems.Add("Baglanti ayarlari (IP / port / kullanici)...", null, delegate { OpenConnectionDialog(); });
+            connMenu.DropDownItems.Add("Baglanti ayarlari (cihaz IP)...", null, delegate { OpenConnectionDialog(); });
             connMenu.DropDownItems.Add(new ToolStripSeparator());
             ToolStripMenuItem probeItem = new ToolStripMenuItem("Cihaz API'sini dene (GetPages)");
             probeItem.Click += delegate { ProbeApi(); };
@@ -1226,6 +1227,7 @@ namespace PlcDashboard
 
         static string ConfigPath { get { return Path.Combine(AppDir, "config.json"); } }
 
+        // config.json yalnizca cihaz IP'sini tutar; diger parametreler programda sabit.
         void LoadConfig()
         {
             if (File.Exists(ConfigPath))
@@ -1237,14 +1239,7 @@ namespace PlcDashboard
                     {
                         if (cfg.ContainsKey("deviceHost")) deviceHost = Convert.ToString(cfg["deviceHost"]).Trim();
                         else if (cfg.ContainsKey("host")) deviceHost = Convert.ToString(cfg["host"]).Trim();
-                        if (cfg.ContainsKey("jsonPort")) jsonHttpPort = Convert.ToInt32(cfg["jsonPort"]);
                         if (cfg.ContainsKey("localTunnelPort")) tunnel.LocalPort = Convert.ToInt32(cfg["localTunnelPort"]);
-                        if (cfg.ContainsKey("remoteHttpPort")) tunnel.RemotePort = Convert.ToInt32(cfg["remoteHttpPort"]);
-                        if (cfg.ContainsKey("pin")) apiPin = Convert.ToString(cfg["pin"]);
-                        if (cfg.ContainsKey("user")) apiUser = Convert.ToString(cfg["user"]);
-                        if (cfg.ContainsKey("password")) apiPass = Convert.ToString(cfg["password"]);
-                        if (cfg.ContainsKey("scopePort")) apiScopePort = Convert.ToInt32(cfg["scopePort"]);
-                        if (cfg.ContainsKey("jsonTimeoutMs")) jsonTimeoutMs = Convert.ToInt32(cfg["jsonTimeoutMs"]);
                         if (cfg.ContainsKey("directFallback")) allowDirectFallback = Convert.ToString(cfg["directFallback"]) != "false";
                     }
                 }
@@ -1259,14 +1254,7 @@ namespace PlcDashboard
             StringBuilder sb = new StringBuilder();
             sb.AppendLine("{");
             sb.AppendLine("  \"deviceHost\": \"" + JsonEsc(deviceHost) + "\",");
-            sb.AppendLine("  \"jsonPort\": " + jsonHttpPort.ToString(CultureInfo.InvariantCulture) + ",");
             sb.AppendLine("  \"localTunnelPort\": " + tunnel.LocalPort.ToString(CultureInfo.InvariantCulture) + ",");
-            sb.AppendLine("  \"remoteHttpPort\": " + tunnel.RemotePort.ToString(CultureInfo.InvariantCulture) + ",");
-            sb.AppendLine("  \"scopePort\": " + apiScopePort.ToString(CultureInfo.InvariantCulture) + ",");
-            sb.AppendLine("  \"pin\": \"" + JsonEsc(apiPin) + "\",");
-            sb.AppendLine("  \"user\": \"" + JsonEsc(apiUser) + "\",");
-            sb.AppendLine("  \"password\": \"" + JsonEsc(apiPass) + "\",");
-            sb.AppendLine("  \"jsonTimeoutMs\": " + jsonTimeoutMs.ToString(CultureInfo.InvariantCulture) + ",");
             sb.AppendLine("  \"directFallback\": " + (allowDirectFallback ? "true" : "false"));
             sb.AppendLine("}");
             try { File.WriteAllText(ConfigPath, sb.ToString()); }
@@ -1277,25 +1265,19 @@ namespace PlcDashboard
         {
             using (Form dlg = new Form())
             {
-                dlg.Text = "Baglanti ayarlari";
+                dlg.Text = "Cihaz IP adresi";
                 dlg.FormBorderStyle = FormBorderStyle.FixedDialog;
                 dlg.StartPosition = FormStartPosition.CenterParent;
                 dlg.MinimizeBox = false;
                 dlg.MaximizeBox = false;
-                dlg.ClientSize = new Size(340, 300);
+                dlg.ClientSize = new Size(340, 140);
 
                 TextBox hostBox = DialField(dlg, "Cihaz IP / host", deviceHost, 14);
-                TextBox jsonPortBox = DialField(dlg, "Cihaz HTTP portu", jsonHttpPort.ToString(CultureInfo.InvariantCulture), 46);
-                TextBox localPortBox = DialField(dlg, "Yerel tunel portu", tunnel.LocalPort.ToString(CultureInfo.InvariantCulture), 78);
-                TextBox scopeBox = DialField(dlg, "SCOPE portu", apiScopePort.ToString(CultureInfo.InvariantCulture), 110);
-                TextBox pinBox = DialField(dlg, "API pin", apiPin, 142);
-                TextBox userBox = DialField(dlg, "Kullanici", apiUser, 174);
-                TextBox passBox = DialField(dlg, "Sifre", apiPass, 206);
-                passBox.UseSystemPasswordChar = true;
 
                 Label note = new Label();
-                note.Text = "Tunel icin Siemens RainbowTcpTunnel kurulu olmali. Kurulu degilse ayni API dogrudan cihaz IP'sinden okunur.";
-                note.Location = new Point(14, 232);
+                note.Text = "Okuma RainbowTcpTunnel uzerinden cihaz JSON API'si ile yapilir.\r\n"
+                    + "Kullanici, sifre, pin ve portlar programda kayitlidir.";
+                note.Location = new Point(14, 46);
                 note.Size = new Size(312, 32);
                 note.Font = new Font("Segoe UI", 7.75f);
                 note.ForeColor = Color.FromArgb(90, 100, 105);
@@ -1303,45 +1285,34 @@ namespace PlcDashboard
 
                 Button testBtn = new Button();
                 testBtn.Text = "Baglantiyi dene";
-                testBtn.Location = new Point(14, 266);
+                testBtn.Location = new Point(14, 92);
                 testBtn.Size = new Size(140, 26);
                 dlg.Controls.Add(testBtn);
 
                 Button okBtn = new Button();
                 okBtn.Text = "Kaydet ve baglan";
-                okBtn.Location = new Point(186, 266);
+                okBtn.Location = new Point(186, 92);
                 okBtn.Size = new Size(140, 26);
                 okBtn.DialogResult = DialogResult.OK;
                 dlg.Controls.Add(okBtn);
+                dlg.AcceptButton = okBtn;
 
-                testBtn.Click += delegate { ProbeDirect(hostBox.Text.Trim(), ParsePort(jsonPortBox.Text, 80), passBox.Text, userBox.Text.Trim(), pinBox.Text.Trim()); };
+                testBtn.Click += delegate { ProbeDirect(hostBox.Text.Trim(), jsonHttpPort, apiPass, apiUser, apiPin); };
 
                 if (dlg.ShowDialog(this) != DialogResult.OK) return;
 
                 deviceHost = hostBox.Text.Trim();
-                jsonHttpPort = ParsePort(jsonPortBox.Text, 80);
-                tunnel.LocalPort = ParsePort(localPortBox.Text, 4243);
-                apiScopePort = ParsePort(scopeBox.Text, 4242);
-                apiPin = pinBox.Text.Trim();
-                apiUser = userBox.Text.Trim();
-                apiPass = passBox.Text;
                 tunnelUnavailable = false;
 
                 if (string.IsNullOrEmpty(deviceHost))
                 {
-                    SetStatus("cihaz IP girilmedi - Baglanti ayarlari'ndan girin");
+                    SetStatus("cihaz IP girilmedi - Seciler > Baglanti > Baglanti ayarlari");
                     return;
                 }
 
                 SaveConfig();
                 EnsureTunnelThenPoll();
             }
-        }
-
-        static int ParsePort(string s, int fallback)
-        {
-            int v;
-            return int.TryParse((s ?? "").Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out v) && v > 0 && v < 65536 ? v : fallback;
         }
 
         static TextBox DialField(Form dlg, string caption, string value, int y)

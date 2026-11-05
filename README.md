@@ -32,26 +32,19 @@ GET /json.html?FN=GetPages&pin=6000
 |---|---|
 | `src/PlcDashboard.cs` | Tek dosyalik kaynak kod (~2700 satir, WinForms) |
 | `PlcDashboard.exe` | Derlenmis surum (Release asset olarak da eklenir) |
-| `config.json` | Baglanti ayarlari; ilk calistirmada pencereden girilir (asagidaki ornek) |
+| `config.json` | Yalnizca cihaz IP'sini tutar; ilk calistirmada pencereden girilir |
 | `points.json` | `datapointId` -> cihaz nokta adi (`jsonId`) eslemesi |
 | `dashboard.sample.json` | Kucuk ornek pano; kendi JSON'unuzla degistirin |
 | `build.cmd` | `csc.exe` ile derleme betigi |
 
-IP ve sifre kodun icinde **gömülü degildir**; `config.json`'dan veya acilan
-"Baglanti ayarlari" penceresinden gelir. `config.json` yoksa program acilir acilmaz
-bu pencereyi kendisi acar.
+Kullanici (`ADMIN`), sifre, API pin (`6000`) ve portlar programin icinde kayitlidir;
+kullanicidan **yalnizca IP** istenir. `config.json` yoksa veya IP bos ise program
+acilir acilmaz "Cihaz IP adresi" penceresini acar.
 
 ```json
 {
   "deviceHost": "10.0.0.0",
-  "jsonPort": 80,
   "localTunnelPort": 4243,
-  "remoteHttpPort": 80,
-  "scopePort": 4242,
-  "pin": "6000",
-  "user": "ADMIN",
-  "password": "",
-  "jsonTimeoutMs": 3000,
   "directFallback": true
 }
 ```
@@ -63,7 +56,8 @@ olarak kullanilir.
 
 1. `PlcDashboard.exe`'yi bir klasore koyun, yanina pano JSON'unuzu ve `points.json`'u yerlestirin.
 2. Exe'yi calistirin (veya JSON dosyasini exe'nin uzerine suruk-birak edin).
-3. IP sorulursa cihaz adresini ve kullanici/sifre bilgilerini girin, **Kaydet ve baglan**.
+3. IP penceresi acilirsa cihaz adresini yazip **Kaydet ve baglan** deyin; baglanti
+   RainbowTcpTunnel uzerinden kurulur.
 4. Kutu secip sagdaki alanlardan `Nokta id` degerini duzenleyebilirsiniz; `Bu noktayi tek oku`
    secili noktanin ham API yanitini gosterir.
 
