@@ -637,28 +637,33 @@ namespace PlcDashboard
         public string Detail = "";
         public bool Selected;
 
-        static readonly Color Petrol = Color.FromArgb(19, 74, 84);
-        static readonly Color PetrolText = Color.FromArgb(226, 238, 241);
-        static readonly Color GrayLight = Color.FromArgb(236, 239, 240);
-        static readonly Color GrayText = Color.FromArgb(45, 55, 60);
-        static readonly Color BarFill = Color.FromArgb(40, 130, 160);
+        // Qoder paleti: beyaz kartlar, acik gri paneller, ada cay yesili (#4B6F5A) vurgu.
+        static readonly Color Accent = Color.FromArgb(75, 111, 90);
+        static readonly Color CardBorder = Color.FromArgb(229, 229, 229);
+        static readonly Color CardFill = Color.White;
+        static readonly Color SelFill = Color.FromArgb(240, 244, 242);
+        static readonly Color TitleText = Color.FromArgb(131, 130, 128);
+        static readonly Color ValueText = Color.FromArgb(8, 8, 7);
+        static readonly Color UnitText = Color.FromArgb(150, 150, 148);
+        static readonly Color Track = Color.FromArgb(232, 236, 234);
 
-        static readonly Dictionary<string, Color[]> Theme = new Dictionary<string, Color[]>(StringComparer.OrdinalIgnoreCase)
+        static readonly Dictionary<string, Color> Accents = new Dictionary<string, Color>(StringComparer.OrdinalIgnoreCase)
         {
-            { "petrol-background", new Color[] { Petrol, PetrolText } },
-            { "green-background", new Color[] { Color.FromArgb(35, 104, 74), Color.FromArgb(226, 241, 234) } },
-            { "red-background", new Color[] { Color.FromArgb(122, 42, 42), Color.FromArgb(241, 228, 226) } },
-            { "orange-background", new Color[] { Color.FromArgb(140, 84, 26), Color.FromArgb(244, 235, 222) } },
-            { "yellow-background", new Color[] { Color.FromArgb(140, 126, 30), Color.FromArgb(244, 241, 222) } },
-            { "blue-background", new Color[] { Color.FromArgb(30, 74, 122), Color.FromArgb(226, 236, 245) } },
-            { "purple-background", new Color[] { Color.FromArgb(84, 46, 110), Color.FromArgb(236, 228, 242) } }
+            { "petrol-background", Accent },
+            { "natural-gray-light-background", Color.FromArgb(131, 130, 128) },
+            { "green-background", Accent },
+            { "red-background", Color.FromArgb(236, 91, 86) },
+            { "orange-background", Color.FromArgb(217, 142, 56) },
+            { "yellow-background", Color.FromArgb(183, 154, 46) },
+            { "blue-background", Color.FromArgb(58, 147, 225) },
+            { "purple-background", Color.FromArgb(122, 91, 166) }
         };
 
-        public static Color[] PaletteFor(string cls)
+        public static Color AccentFor(string cls)
         {
-            Color[] c;
-            if (!string.IsNullOrEmpty(cls) && Theme.TryGetValue(cls, out c)) return c;
-            return new Color[] { GrayLight, GrayText };
+            Color c;
+            if (!string.IsNullOrEmpty(cls) && Accents.TryGetValue(cls, out c)) return c;
+            return Accent;
         }
 
         public TileView()
@@ -673,23 +678,17 @@ namespace PlcDashboard
             g.SmoothingMode = SmoothingMode.AntiAlias;
             g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.ClearTypeGridFit;
 
-            Color[] pal = PaletteFor(Model.Color);
-            Color back = pal[0], fore = pal[1];
-            bool petrol = back.GetBrightness() < 0.4f;
+            Color accent = AccentFor(Model.Color);
 
             Rectangle r = new Rectangle(0, 0, Width - 1, Height - 1);
             using (GraphicsPath p = Round(r))
-            using (SolidBrush b = new SolidBrush(back)) g.FillPath(b, p);
-
-            if (Selected)
             {
-                using (Pen pen = new Pen(Color.FromArgb(255, 153, 0), 3f))
-                using (GraphicsPath sp = Round(new Rectangle(1, 1, Width - 3, Height - 3)))
-                {
-                    pen.DashStyle = DashStyle.Dash;
-                    g.DrawPath(pen, sp);
-                }
+                using (SolidBrush b = new SolidBrush(Selected ? SelFill : CardFill)) g.FillPath(b, p);
+                using (Pen pen = new Pen(Selected ? Accent : CardBorder, Selected ? 2f : 1f)) g.DrawPath(pen, p);
             }
+            using (SolidBrush ab = new SolidBrush(accent))
+            using (GraphicsPath sp = Round(new Rectangle(3, 3, Math.Max(1, Width - 7), 4)))
+                g.FillPath(ab, sp);
 
             string label = Model.Title;
             if (string.IsNullOrEmpty(label)) label = Model.PointName;
@@ -698,7 +697,7 @@ namespace PlcDashboard
             using (Font vf = new Font("Segoe UI", 18f, FontStyle.Bold))
             using (Font uf = new Font("Segoe UI", 8.25f))
             {
-                TextRenderer.DrawText(g, label, lf, new Rectangle(10, 6, Width - 20, 18), fore,
+                TextRenderer.DrawText(g, label, lf, new Rectangle(10, 8, Width - 20, 18), TitleText,
                     TextFormatFlags.Left | TextFormatFlags.Top | TextFormatFlags.EndEllipsis);
 
                 if (Model.Type == "webpicture")
@@ -711,29 +710,29 @@ namespace PlcDashboard
 
                 if (Model.Type == "bargauge")
                 {
-                    TextRenderer.DrawText(g, valText + " %", vf, new Rectangle(10, 24, Width - 20, 32), fore,
+                    TextRenderer.DrawText(g, valText + " %", vf, new Rectangle(10, 26, Width - 20, 32), ValueText,
                         TextFormatFlags.Left | TextFormatFlags.Top);
                     Rectangle track = new Rectangle(10, Height - 30, Math.Max(0, Width - 20), 12);
                     if (track.Width > 4)
                     {
-                        using (SolidBrush tb = new SolidBrush(petrol ? Color.FromArgb(35, 92, 104) : Color.FromArgb(211, 216, 219)))
+                        using (SolidBrush tb = new SolidBrush(Track))
                         using (GraphicsPath tp = Round(track)) g.FillPath(tb, tp);
                         if (Value.HasValue && Model.BarMax > 0)
                         {
                             double frac = Math.Max(0, Math.Min(1, Value.Value / Model.BarMax));
                             Rectangle fill = new Rectangle(track.X, track.Y, (int)(track.Width * frac), track.Height);
                             if (fill.Width > 3)
-                                using (SolidBrush fb = new SolidBrush(BarFill))
+                                using (SolidBrush fb = new SolidBrush(accent))
                                 using (GraphicsPath fp = Round(fill)) g.FillPath(fb, fp);
                         }
                     }
                 }
                 else
                 {
-                    TextRenderer.DrawText(g, valText, vf, new Rectangle(10, 26, Width - 20, 32), fore,
+                    TextRenderer.DrawText(g, valText, vf, new Rectangle(10, 28, Width - 20, 32), ValueText,
                         TextFormatFlags.Left | TextFormatFlags.Top);
                     string sub = Value.HasValue ? UnitOf : "esleme yok";
-                    TextRenderer.DrawText(g, sub, uf, new Rectangle(10, 60, Width - 20, 16), fore,
+                    TextRenderer.DrawText(g, sub, uf, new Rectangle(10, 62, Width - 20, 16), UnitText,
                         TextFormatFlags.Left | TextFormatFlags.Top);
                 }
             }
@@ -778,6 +777,59 @@ namespace PlcDashboard
             p.CloseFigure();
             return p;
         }
+    }
+
+    // Qoder masaustu uygulamasinin paleti: acik gri paneller, beyaz yuzeyler,
+    // ada cay yesili (#4B6F5A) vurgu ve yine yesil tonlu hover.
+    class QTheme : ProfessionalColorTable
+    {
+        static readonly Color Panel = Color.FromArgb(246, 246, 246);
+        static readonly Color White = Color.White;
+        static readonly Color Hover = Color.FromArgb(232, 236, 234);
+        static readonly Color Accent = Color.FromArgb(75, 111, 90);
+        static readonly Color Border = Color.FromArgb(229, 229, 229);
+
+        public override Color MenuStripGradientBegin { get { return Panel; } }
+        public override Color MenuStripGradientEnd { get { return Panel; } }
+        public override Color MenuBorder { get { return Border; } }
+        public override Color MenuItemSelected { get { return Hover; } }
+        public override Color MenuItemSelectedGradientBegin { get { return Hover; } }
+        public override Color MenuItemSelectedGradientEnd { get { return Hover; } }
+        public override Color MenuItemBorder { get { return Hover; } }
+        public override Color MenuItemPressedGradientBegin { get { return Hover; } }
+        public override Color MenuItemPressedGradientEnd { get { return Hover; } }
+        public override Color ToolStripBorder { get { return Border; } }
+        public override Color ToolStripGradientBegin { get { return Panel; } }
+        public override Color ToolStripGradientMiddle { get { return Panel; } }
+        public override Color ToolStripGradientEnd { get { return Panel; } }
+        public override Color ToolStripDropDownBackground { get { return White; } }
+        public override Color ImageMarginGradientBegin { get { return White; } }
+        public override Color ImageMarginGradientMiddle { get { return White; } }
+        public override Color ImageMarginGradientEnd { get { return White; } }
+        public override Color SeparatorDark { get { return Border; } }
+        public override Color SeparatorLight { get { return White; } }
+        public override Color ButtonSelectedGradientBegin { get { return Hover; } }
+        public override Color ButtonSelectedGradientMiddle { get { return Hover; } }
+        public override Color ButtonSelectedGradientEnd { get { return Hover; } }
+        public override Color ButtonSelectedBorder { get { return Accent; } }
+        public override Color ButtonPressedGradientBegin { get { return Hover; } }
+        public override Color ButtonPressedGradientMiddle { get { return Hover; } }
+        public override Color ButtonPressedGradientEnd { get { return Hover; } }
+        public override Color ButtonPressedBorder { get { return Accent; } }
+        public override Color ButtonCheckedGradientBegin { get { return Hover; } }
+        public override Color ButtonCheckedGradientMiddle { get { return Hover; } }
+        public override Color ButtonCheckedGradientEnd { get { return Hover; } }
+        public override Color ButtonCheckedHighlight { get { return Hover; } }
+        public override Color CheckBackground { get { return White; } }
+        public override Color CheckSelectedBackground { get { return Accent; } }
+        public override Color CheckPressedBackground { get { return Hover; } }
+        public override Color StatusStripGradientBegin { get { return Panel; } }
+        public override Color StatusStripGradientEnd { get { return Panel; } }
+        public override Color OverflowButtonGradientBegin { get { return Panel; } }
+        public override Color OverflowButtonGradientMiddle { get { return Panel; } }
+        public override Color OverflowButtonGradientEnd { get { return Panel; } }
+        public override Color GripDark { get { return Border; } }
+        public override Color GripLight { get { return White; } }
     }
 
     public class MainForm : Form
@@ -851,11 +903,12 @@ namespace PlcDashboard
 
         public MainForm()
         {
+            ToolStripManager.Renderer = new ToolStripProfessionalRenderer(new QTheme());
             Text = "PLC Dashboard";
             Width = 1180;
             Height = 620;
             MinimumSize = new Size(720, 440);
-            BackColor = Color.FromArgb(247, 248, 249);
+            BackColor = Color.FromArgb(246, 246, 246);
             AllowDrop = true;
             KeyPreview = true;
             DragEnter += OnDragEnter;
@@ -923,6 +976,7 @@ namespace PlcDashboard
             statusLabel = new ToolStripStatusLabel("");
             statusLabel.Spring = true;
             statusLabel.TextAlign = ContentAlignment.MiddleLeft;
+            statusLabel.ForeColor = Color.FromArgb(131, 130, 128);
             status.Items.Add(statusLabel);
 
             ToolStrip tool = new ToolStrip();
@@ -960,7 +1014,7 @@ namespace PlcDashboard
 
             gridPanel = new Panel();
             gridPanel.Dock = DockStyle.Fill;
-            gridPanel.BackColor = Color.FromArgb(247, 248, 249);
+            gridPanel.BackColor = Color.White;
             gridPanel.Resize += delegate { LayoutTiles(); };
 
             editorPanel = BuildEditor();
@@ -1001,8 +1055,8 @@ namespace PlcDashboard
             Panel host = new Panel();
             host.Dock = DockStyle.Right;
             host.Width = 330;
-            host.BackColor = Color.FromArgb(252, 252, 252);
-            host.BorderStyle = BorderStyle.Fixed3D;
+            host.BackColor = Color.FromArgb(246, 246, 246);
+            host.BorderStyle = BorderStyle.FixedSingle;
             host.AutoScroll = true;
             host.Visible = false;
 
@@ -1061,7 +1115,7 @@ namespace PlcDashboard
             prefixLbl.Location = new Point(90, y + 1);
             prefixLbl.Size = new Size(18, 20);
             prefixLbl.Font = new Font("Segoe UI", 9f, FontStyle.Bold);
-            prefixLbl.ForeColor = Color.FromArgb(19, 74, 84);
+            prefixLbl.ForeColor = Color.FromArgb(75, 111, 90);
             host.Controls.Add(prefixLbl);
 
             txtPointId = new TextBox();
@@ -1076,7 +1130,7 @@ namespace PlcDashboard
             prefixHint.Location = new Point(90, y);
             prefixHint.Size = new Size(214, 14);
             prefixHint.Font = new Font("Segoe UI", 7.5f);
-            prefixHint.ForeColor = Color.FromArgb(120, 128, 132);
+            prefixHint.ForeColor = Color.FromArgb(131, 130, 128);
             host.Controls.Add(prefixHint);
             y += 20;
 
@@ -1109,7 +1163,7 @@ namespace PlcDashboard
             jsonHint.Location = new Point(90, y);
             jsonHint.Size = new Size(214, 26);
             jsonHint.Font = new Font("Segoe UI", 7.5f);
-            jsonHint.ForeColor = Color.FromArgb(120, 128, 132);
+            jsonHint.ForeColor = Color.FromArgb(131, 130, 128);
             host.Controls.Add(jsonHint);
             y += 30;
 
@@ -1140,7 +1194,7 @@ namespace PlcDashboard
             saveBtn.Text = "Revize JSON kaydet";
             saveBtn.Location = new Point(12, y);
             saveBtn.Size = new Size(150, 26);
-            saveBtn.BackColor = Color.FromArgb(226, 238, 241);
+            saveBtn.BackColor = Color.FromArgb(232, 236, 234);
             saveBtn.Click += delegate { SaveRevisedJson(false); };
             host.Controls.Add(saveBtn);
 
@@ -1271,6 +1325,7 @@ namespace PlcDashboard
                 dlg.MinimizeBox = false;
                 dlg.MaximizeBox = false;
                 dlg.ClientSize = new Size(340, 140);
+                dlg.BackColor = Color.FromArgb(246, 246, 246);
 
                 TextBox hostBox = DialField(dlg, "Cihaz IP / host", deviceHost, 14);
 
@@ -1280,7 +1335,7 @@ namespace PlcDashboard
                 note.Location = new Point(14, 46);
                 note.Size = new Size(312, 32);
                 note.Font = new Font("Segoe UI", 7.75f);
-                note.ForeColor = Color.FromArgb(90, 100, 105);
+                note.ForeColor = Color.FromArgb(131, 130, 128);
                 dlg.Controls.Add(note);
 
                 Button testBtn = new Button();
