@@ -68,6 +68,10 @@ Menu:
 Duzenleme modunda `Ctrl+Z` / `Ctrl+Y` geri-ileri alir; PNG/JPEG eklemeler SVG kapsayiciya
 cevrilip kutu genisligine oturtulur.
 
+Gorsel dil Qoder masaustu uygulamasiyla aynidir: acik gri paneller (`#F6F6F6`), beyaz
+yuvarlatilmis kartlar, ada cay yesili (`#4B6F5A`) vurgu ve ayni palette cizilmis bir exe
+ikonu. Kart rengi sinifindan gelen renk, kartin ust seridinde ve bar dolgusunda gorunur.
+
 Revize JSON ciktilari cihazdan disari aktarilan orijinal dosyanin bicmini korur: alan ve
 nesne sirasi aynen kalir, 2 bosluk girinti, LF satir sonu, BOM'suz UTF-8 ve `'` gibi
 karakterler oldugu gibi yazilir (`\u0027`'ye cevrilmez). Duzenlenmis satirlar disinda dosya
